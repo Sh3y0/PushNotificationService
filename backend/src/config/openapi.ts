@@ -1,13 +1,33 @@
 import { readFileSync } from 'fs';
-import { dirname, join } from 'path';
-import { fileURLToPath } from 'url';
+import { join, resolve } from 'path';
 import { parse as parseYaml } from 'yaml';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+/**
+ * Resolve the path to the OpenAPI spec file.
+ *
+ * Resolution order:
+ *   1. OPENAPI_SPEC_PATH env var (absolute or relative to cwd) — fully
+ *      configurable for any deployment topology.
+ *   2. Default: `../docs/api-contract.openapi.yaml` relative to cwd.
+ *      When the backend is deployed with `rootDirectory: ./backend`, cwd is
+ *      the `backend/` directory, so this correctly points one level up to the
+ *      repo-root `docs/` folder.
+ *
+ * Using process.cwd() instead of __dirname avoids the ambiguity between the
+ * TypeScript source tree (src/config/) and the compiled output tree
+ * (dist/config/), which caused the previous '../../../docs/...' path to
+ * resolve to the wrong location after compilation.
+ */
+function resolveSpecPath(): string {
+  if (process.env.OPENAPI_SPEC_PATH) {
+    return resolve(process.env.OPENAPI_SPEC_PATH);
+  }
+  return join(process.cwd(), '../docs/api-contract.openapi.yaml');
+}
 
 /** OpenAPI file lives at repo root: docs/api-contract.openapi.yaml */
 export function loadOpenApiSpec(): Record<string, unknown> {
-  const specPath = join(__dirname, '../../../docs/api-contract.openapi.yaml');
+  const specPath = resolveSpecPath();
   const raw = readFileSync(specPath, 'utf8');
   return parseYaml(raw) as Record<string, unknown>;
 }
