@@ -21,7 +21,8 @@ export function createApp(): Express {
 
   try {
     const openApiSpec = loadOpenApiSpec();
-    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiSpec));
+    // `serve` is an array of middlewares; spread so Express registers each (reliable with ESM + Express 4).
+    app.use('/api-docs', ...swaggerUi.serve, swaggerUi.setup(openApiSpec, { explorer: true }));
   } catch (err) {
     logger.warn('OpenAPI spec not loaded; /api-docs disabled', {
       message: err instanceof Error ? err.message : String(err),

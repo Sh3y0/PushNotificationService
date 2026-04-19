@@ -63,7 +63,7 @@ With the server running, open interactive docs in the browser:
 
 `http://localhost:3000/api-docs`
 
-That page is generated from `../docs/api-contract.openapi.yaml`. If the file cannot be read (for example wrong working directory), `/api-docs` is not registered and a warning is logged at startup.
+That page is generated from `openapi.yaml` in this package (same folder as `package.json`). If the file cannot be read, `/api-docs` is not registered and a warning is logged at startup. Override with env `OPENAPI_SPEC_PATH` if needed.
 
 ## Endpoints (summary)
 
@@ -74,7 +74,7 @@ That page is generated from `../docs/api-contract.openapi.yaml`. If the file can
 - `GET /subscribers` — List all subscription rows (`playerId`, `segment`, `isSubscribed`, timestamps); requires header `x-api-key`
 - `POST /send` — Send a notification (requires header `x-api-key` matching `API_KEY` in `.env`)
 
-The full contract is described in `../docs/api-contract.openapi.yaml` at the repository root.
+The full OpenAPI contract is `openapi.yaml` in this directory (same file Swagger uses).
 
 ## Security notes
 

@@ -1,0 +1,180 @@
+openapi: 3.0.3
+info:
+  title: Push Notification Platform API
+  version: 1.0.0
+  description: |
+    Contract for the Node.js notification gateway.
+
+    **Identifiers:** `playerId` is the OneSignal Web **subscription id** from the browser SDK. The backend stores it in PostgreSQL.
+
+    **Segments:** Targeting a named `segment` in `/send` uses a OneSignal user tag `segment=<value>`.
+servers:
+  - url: http://localhost:3000
+    description: Local development
+paths:
+  /health:
+    get:
+      summary: Service health
+      responses:
+        '200':
+          description: API and database reachable
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  database:
+                    type: string
+                    example: connected
+  /subscribe:
+    post:
+      summary: Register or refresh a push subscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [playerId]
+              properties:
+                playerId:
+                  type: string
+                segment:
+                  type: string
+                  default: general
+      responses:
+        '200':
+          description: Subscription stored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionRecord'
+  /unsubscribe:
+    post:
+      summary: Mark subscription inactive in PostgreSQL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [playerId]
+              properties:
+                playerId:
+                  type: string
+      responses:
+        '200':
+          description: Updated subscription
+        '404':
+          description: Unknown playerId
+  /subscribers:
+    get:
+      summary: List all stored subscriptions
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: List of subscribers
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [subscribers]
+                properties:
+                  subscribers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SubscriberSummary'
+        '401':
+          description: Missing or invalid API key
+  /status/{playerId}:
+    get:
+      summary: Read subscription flags from PostgreSQL
+      parameters:
+        - name: playerId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Current persisted subscription state
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isSubscribed:
+                    type: boolean
+                  segment:
+                    type: string
+  /send:
+    post:
+      summary: Trigger a push via OneSignal (protected)
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title, message, url]
+              properties:
+                title:
+                  type: string
+                message:
+                  type: string
+                url:
+                  type: string
+                  format: uri
+                segment:
+                  type: string
+                  nullable: true
+      responses:
+        '202':
+          description: Accepted and logged as sent
+        '502':
+          description: Logged as failed (OneSignal error)
+        '401':
+          description: Missing or invalid API key
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+  schemas:
+    SubscriptionRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        playerId:
+          type: string
+        isSubscribed:
+          type: boolean
+        segment:
+          type: string
+    SubscriberSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        playerId:
+          type: string
+        segment:
+          type: string
+        isSubscribed:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
