@@ -37,6 +37,8 @@ Source lives under `src/` and compiles to `dist/` for production runs.
    | `DB_USER` | Database user |
    | `DB_PASSWORD` | Database password (can be empty for local trust auth) |
    | `DB_NAME` | Database name (created automatically on first run if missing) |
+   | `DB_SSL` | Set `true` (or `require`) when the provider requires TLS (fixes “connection is insecure (try using sslmode=require)”) |
+   | `DB_SSL_REJECT_UNAUTHORIZED` | Defaults to `true`; set `false` only if your host uses a cert chain Node rejects (common on some managed DBs) |
 
    On first startup the service connects to the `postgres` database to create `DB_NAME` when it does not exist, then creates the `subscriptions` and `notifications_log` tables if needed.
 

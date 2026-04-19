@@ -4,21 +4,24 @@ import { logger } from '../utils/logger.js';
 
 const { Client, Pool } = pg;
 
-const adminConfig: pg.ClientConfig = {
-  host: env.DB_HOST,
-  port: env.DB_PORT,
-  user: env.DB_USER,
-  password: env.DB_PASSWORD || undefined,
-  database: 'postgres',
-};
+function clientConfig(database: string): pg.ClientConfig {
+  const base: pg.ClientConfig = {
+    host: env.DB_HOST,
+    port: env.DB_PORT,
+    user: env.DB_USER,
+    password: env.DB_PASSWORD || undefined,
+    database,
+  };
 
-const appDbConfig: pg.ClientConfig = {
-  host: env.DB_HOST,
-  port: env.DB_PORT,
-  user: env.DB_USER,
-  password: env.DB_PASSWORD || undefined,
-  database: env.DB_NAME,
-};
+  if (env.DB_SSL) {
+    base.ssl = env.DB_SSL_REJECT_UNAUTHORIZED ? { rejectUnauthorized: true } : { rejectUnauthorized: false };
+  }
+
+  return base;
+}
+
+const adminConfig = clientConfig('postgres');
+const appDbConfig = clientConfig(env.DB_NAME);
 
 let pool: pg.Pool | null = null;
 
