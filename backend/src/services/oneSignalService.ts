@@ -2,12 +2,11 @@ import axios from 'axios';
 import { env } from '../config/env.js';
 import { logger } from '../utils/logger.js';
 
-const ONESIGNAL_URL = 'https://onesignal.com/api/v1/notifications';
-
 type OneSignalFilter = { field: string; key: string; relation: string; value: string };
 
 type OneSignalPayload = {
   app_id: string;
+  target_channel: 'push';
   headings: { en: string };
   contents: { en: string };
   url: string;
@@ -15,9 +14,13 @@ type OneSignalPayload = {
   included_segments?: string[];
 };
 
+/**
+ * Current OneSignal REST API uses `Authorization: Key <REST_API_KEY>` and
+ * `POST https://api.onesignal.com/notifications` (see their docs).
+ * Legacy Basic auth against onesignal.com/api/v1 returns 403 for newer keys.
+ */
 function authHeader(): string {
-  const token = Buffer.from(`:${env.ONESIGNAL_API_KEY}`).toString('base64');
-  return `Basic ${token}`;
+  return `Key ${env.ONESIGNAL_API_KEY}`;
 }
 
 function sleep(ms: number): Promise<void> {
@@ -40,6 +43,7 @@ export async function sendNotification(input: SendNotificationInput): Promise<Se
 
   const body: OneSignalPayload = {
     app_id: env.ONESIGNAL_APP_ID,
+    target_channel: 'push',
     headings: { en: title },
     contents: { en: message },
     url,
@@ -56,7 +60,7 @@ export async function sendNotification(input: SendNotificationInput): Promise<Se
 
   for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
     try {
-      const response = await axios.post(ONESIGNAL_URL, body, {
+      const response = await axios.post(env.ONESIGNAL_API_URL, body, {
         headers: {
           Authorization: authHeader(),
           'Content-Type': 'application/json',

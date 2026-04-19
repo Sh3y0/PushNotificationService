@@ -31,7 +31,8 @@ Source lives under `src/` and compiles to `dist/` for production runs.
    |----------|-------------|
    | `PORT` | HTTP port (default `3000`) |
    | `ONESIGNAL_APP_ID` | OneSignal app ID |
-   | `ONESIGNAL_API_KEY` | OneSignal REST API key |
+   | `ONESIGNAL_API_KEY` | **REST API Key** (Keys & IDs in the OneSignal dashboard). Not the same as your app’s `API_KEY` used for `/send`. |
+   | `ONESIGNAL_API_URL` | Optional. Defaults to `https://api.onesignal.com/notifications` (current API; `Authorization: Key …`). |
    | `DB_HOST` | PostgreSQL host |
    | `DB_PORT` | PostgreSQL port |
    | `DB_USER` | Database user |
