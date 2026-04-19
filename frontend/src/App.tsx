@@ -75,6 +75,17 @@ function readOptedIn(): boolean {
   }
 }
 
+function isAppleTouchDevice(): boolean {
+  const ua = navigator.userAgent;
+  if (/iPhone|iPad|iPod/i.test(ua)) return true;
+  // iPadOS 13+ Safari often reports as Macintosh with touch.
+  return navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+}
+
+function isIosStandalone(): boolean {
+  return Boolean((window.navigator as unknown as { standalone?: boolean }).standalone);
+}
+
 async function waitForSubscriptionId(timeoutMs = 4000): Promise<string | null> {
   const started = Date.now();
   while (Date.now() - started < timeoutMs) {
@@ -98,6 +109,11 @@ export default function App() {
   const [busy, setBusy] = useState(false);
 
   const [showPrompt, setShowPrompt] = useState(false);
+  const [iosPwaHint, setIosPwaHint] = useState(false);
+
+  useEffect(() => {
+    setIosPwaHint(isAppleTouchDevice() && !isIosStandalone());
+  }, []);
 
   const [sendTitle, setSendTitle] = useState('Hello from the demo');
   const [sendMessage, setSendMessage] = useState('Tap to open the URL you configured.');
@@ -294,6 +310,20 @@ export default function App() {
       <div className="grid">
         <section className="card">
           <h2>Subscription panel</h2>
+          {iosPwaHint ? (
+            <p className="hint" role="status">
+              <strong>iPhone / iPad:</strong> Apple only allows web push for this site after you add it to the Home
+              Screen and open it from there (Share → Add to Home Screen → open the new icon). A regular Safari tab will
+              not show the permission prompt reliably. You also need iOS / iPadOS 16.4 or newer.
+            </p>
+          ) : null}
+          {!ready ? (
+            <p className="hint" role="status">
+              Starting OneSignal… Subscribe stays disabled until initialization finishes. If this hangs, confirm{' '}
+              <span className="mono">VITE_ONESIGNAL_APP_ID</span> is set at build time on Railway and this site URL is
+              allowed in your OneSignal web configuration.
+            </p>
+          ) : null}
           <div className="row">
             <span className={`pill ${backendStatus?.isSubscribed ? 'ok' : 'warn'}`}>{statusLabel}</span>
             {backendStatus?.segment ? (
