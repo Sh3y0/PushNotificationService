@@ -7,6 +7,23 @@ import './App.css';
 
 const STORAGE_PROMPT_KEY = 'notifications_prompt_seen_v1';
 
+/** OneSignal.init() must run once per page load; Strict Mode / HMR re-run effects otherwise. */
+let oneSignalInitPromise: Promise<void> | null = null;
+
+function ensureOneSignalInitialized(appId: string): Promise<void> {
+  if (!oneSignalInitPromise) {
+    oneSignalInitPromise = OneSignal.init({
+      appId,
+      allowLocalhostAsSecureOrigin: true,
+      serviceWorkerPath: '/OneSignalSDKWorker.js',
+    }).catch((err) => {
+      oneSignalInitPromise = null;
+      throw err;
+    });
+  }
+  return oneSignalInitPromise;
+}
+
 function errMessage(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
@@ -24,11 +41,7 @@ function useOneSignalInit(): { ready: boolean; appId: string | undefined } {
         return;
       }
 
-      await OneSignal.init({
-        appId,
-        allowLocalhostAsSecureOrigin: true,
-        serviceWorkerPath: '/OneSignalSDKWorker.js',
-      });
+      await ensureOneSignalInitialized(appId);
 
       if (!cancelled) setReady(true);
     }
