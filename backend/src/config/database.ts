@@ -10,6 +10,7 @@ const adminConfig: pg.ClientConfig = {
   user: env.DB_USER,
   password: env.DB_PASSWORD || undefined,
   database: 'postgres',
+  ssl: { rejectUnauthorized: false },
 };
 
 const appDbConfig: pg.ClientConfig = {
@@ -18,6 +19,7 @@ const appDbConfig: pg.ClientConfig = {
   user: env.DB_USER,
   password: env.DB_PASSWORD || undefined,
   database: env.DB_NAME,
+  ssl: { rejectUnauthorized: false },
 };
 
 let pool: pg.Pool | null = null;
