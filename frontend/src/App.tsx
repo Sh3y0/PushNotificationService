@@ -88,6 +88,8 @@ async function waitForSubscriptionId(timeoutMs = 4000): Promise<string | null> {
 export default function App() {
   const { ready } = useOneSignalInit();
   const apiConfigured = Boolean(import.meta.env.VITE_API_URL);
+  const sendApiKey = import.meta.env.VITE_API_KEY?.trim() ?? '';
+  const sendApiConfigured = Boolean(sendApiKey);
 
   const [playerId, setPlayerId] = useState<string | null>(null);
   const [segment, setSegment] = useState('general');
@@ -101,7 +103,6 @@ export default function App() {
   const [sendMessage, setSendMessage] = useState('Tap to open the URL you configured.');
   const [sendUrl, setSendUrl] = useState('https://example.com');
   const [sendSegment, setSendSegment] = useState('');
-  const [apiKey, setApiKey] = useState('');
 
   const refreshPlayer = useCallback(() => {
     const id = readSubscriptionId();
@@ -241,15 +242,15 @@ export default function App() {
   };
 
   const handleSend = async () => {
-    if (!apiKey.trim()) {
-      toast.error('Paste the backend API key to call /send');
+    if (!sendApiKey) {
+      toast.error('Set VITE_API_KEY in .env to the same value as backend API_KEY');
       return;
     }
 
     setBusy(true);
     try {
       await sendNotification({
-        apiKey: apiKey.trim(),
+        apiKey: sendApiKey,
         title: sendTitle,
         message: sendMessage,
         url: sendUrl,
@@ -339,22 +340,10 @@ export default function App() {
         <section className="card">
           <h2>Demo notification panel</h2>
           <p className="hint">
-            Calls <span className="mono">POST /send</span> with the admin API key header. Keep this key out of source
-            control.
+            Calls <span className="mono">POST /send</span> using <span className="mono">VITE_API_KEY</span> from{' '}
+            <span className="mono">.env</span> (must match backend <span className="mono">API_KEY</span>). The key is
+            embedded in the client bundle; use only for demos.
           </p>
-
-          <div className="field">
-            <label htmlFor="apiKey">Backend API key</label>
-            <input
-              id="apiKey"
-              type="password"
-              autoComplete="off"
-              placeholder="Paste API_KEY from backend .env"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              disabled={busy}
-            />
-          </div>
 
           <div className="field">
             <label htmlFor="title">Title</label>
@@ -383,7 +372,11 @@ export default function App() {
           </div>
 
           <div className="actions">
-            <button type="button" onClick={() => void handleSend()} disabled={busy || !apiConfigured}>
+            <button
+              type="button"
+              onClick={() => void handleSend()}
+              disabled={busy || !apiConfigured || !sendApiConfigured}
+            >
               Send notification
             </button>
           </div>

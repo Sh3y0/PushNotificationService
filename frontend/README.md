@@ -54,7 +54,7 @@ npm run preview
 ## Using the demo
 
 1. Allow notifications when prompted and complete subscribe so the app can read a OneSignal subscription id and call `POST /subscribe` on the API.
-2. Use **Send notification** only with a backend `API_KEY` you paste into the field; that key is not stored in the frontend bundle.
+2. Set `VITE_API_KEY` in `.env` to the backend `API_KEY`, then use **Send notification** (the value is bundled into the client; suitable for demos only).
 
 ## Notes
 
